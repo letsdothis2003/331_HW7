@@ -6,6 +6,8 @@
 
 
 USE WideWorldImporters;
+
+--1
 /*We are gonna put all stock items based on the total quantity sold 
   within each month, identifying tied sellers without rank gaps.
 This helps inventory management and purchasing teams quickly 
@@ -27,3 +29,24 @@ JOIN Warehouse.StockItems SI ON IL.StockItemID = SI.StockItemID
 GROUP BY FORMAT(I.InvoiceDate, 'yyyy-MM'), SI.StockItemName
 ORDER BY Month DESC, Rank;
 --I intentionally made it from most recent to least transaction as in any computer system, it would make sense to see the most newest or recent thing that was just added in. 
+
+
+
+--2
+/*Find our highest ranking customers. We're partitioning based on customer
+id so we get each customer's transactions from earliest within our
+directory to latest with their recent transactions being inputted first.
+This is just to be more organized based on tracking out customer metrics*/
+
+USE WideWorldImporters;
+SELECT 
+    ct.CustomerID, 
+    ct.TransactionDate, 
+    ct.TransactionAmount, 
+    SUM(ct.TransactionAmount) 
+    OVER ( 
+        PARTITION BY ct.CustomerID 
+        ORDER BY ct.TransactionDate, ct.CustomerTransactionID 
+    ) AS TotalSpent
+FROM Sales.CustomerTransactions AS ct
+ORDER BY ct.CustomerID, ct.TransactionDate DESC;
