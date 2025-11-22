@@ -93,6 +93,31 @@ WHERE P.IsSalesperson = 1
 ORDER BY P.FullName;
 
 
+--5
+/*This builds onto prop and query 4 where I take the data per sales so 
+I can take a look at each transaction per order associated with that salesperson
+and find the top 3 profiting sales for that employee.
+This is just to specify what was seen in the last query so we get more data to 
+keep track of in terms of how productive everyone is. */
+WITH OrderTotals AS (
+    SELECT 
+        O.OrderID,
+        P.FullName,
+        SUM(OL.Quantity * OL.UnitPrice) AS OrderTotal,
+        ROW_NUMBER() OVER (
+            PARTITION BY O.SalespersonPersonID 
+            ORDER BY SUM(OL.Quantity * OL.UnitPrice) DESC
+        ) AS SaleRank
+    FROM Sales.Orders O
+    JOIN Sales.OrderLines OL ON O.OrderID = OL.OrderID
+    JOIN Application.People P ON P.PersonID = O.SalespersonPersonID
+    WHERE P.IsSalesperson = 1
+    GROUP BY O.OrderID, O.SalespersonPersonID, P.FullName
+)
+SELECT FullName, OrderID, OrderTotal, SaleRank
+FROM OrderTotals
+WHERE SaleRank <= 3
+ORDER BY FullName, SaleRank;
 
 
 
