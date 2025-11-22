@@ -1,0 +1,29 @@
+-- Fahim Tanvir
+--Group_1045_4
+-- CSCI-331
+-- HW7
+-- intro: 10 queries and props using chapter 7 and medium articles. 
+
+
+USE WideWorldImporters;
+/*We are gonna put all stock items based on the total quantity sold 
+  within each month, identifying tied sellers without rank gaps.
+This helps inventory management and purchasing teams quickly 
+ identify the top-performing products on a monthly basis, 
+ allowing for timely restocking and what to focus on in terms of supplying. 
+I used  DENSE_RANK as it is crucial when rank equality matters, ensuring that 
+            sales reports are consistent and do not skip ranks due to ties.*/
+SELECT 
+    FORMAT(I.InvoiceDate, 'yyyy-MM') AS Month,
+    SI.StockItemName,
+    SUM(IL.Quantity) AS Sold,
+    DENSE_RANK() OVER ( --Partitions and looks at all products sold in the same month
+        PARTITION BY FORMAT(I.InvoiceDate, 'yyyy-MM')
+        ORDER BY SUM(IL.Quantity) DESC
+    ) AS Rank
+FROM Sales.Invoices I
+JOIN Sales.InvoiceLines IL ON I.InvoiceID = IL.InvoiceID
+JOIN Warehouse.StockItems SI ON IL.StockItemID = SI.StockItemID
+GROUP BY FORMAT(I.InvoiceDate, 'yyyy-MM'), SI.StockItemName
+ORDER BY Month DESC, Rank;
+--I intentionally made it from most recent to least transaction as in any computer system, it would make sense to see the most newest or recent thing that was just added in. 
