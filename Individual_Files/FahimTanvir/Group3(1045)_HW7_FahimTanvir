@@ -50,3 +50,49 @@ SELECT
     ) AS TotalSpent
 FROM Sales.CustomerTransactions AS ct
 ORDER BY ct.CustomerID, ct.TransactionDate DESC;
+
+--3
+/*Compare monthly sales revenue using CTEs and lag function to pull each month's sales total.
+Helps with keeping metrics, especially since we are looking at sale's differences per month*/
+WITH MonthlySales AS (
+    SELECT 
+        FORMAT(InvoiceDate, 'MM-yyyy') AS SaleMonth,
+        SUM(TotalDryItems + TotalChillerItems) AS MonthlySalesTotal
+    FROM Sales.Invoices
+    GROUP BY FORMAT(InvoiceDate, 'MM-yyyy')
+)
+SELECT 
+    SaleMonth, 
+    MonthlySalesTotal, 
+    LAG(MonthlySalesTotal, 1) OVER (ORDER BY SaleMonth) AS PreviousMonthSales, 
+    MonthlySalesTotal - LAG(MonthlySalesTotal, 1)
+    OVER (ORDER BY SaleMonth) AS SalesDifference
+FROM MonthlySales
+ORDER BY SaleMonth;
+
+
+--4
+/*This is finds the salesperson and their orders per month.
+This is just for basic tracking of employee profits and data 
+and this is done by using a pivot function. */
+SELECT 
+    P.FullName AS Salesperson, 
+    [2013] AS [2013Orders], 
+    [2014] AS [2014Orders], 
+    [2015] AS [2015Orders]
+FROM (
+    SELECT O.SalespersonPersonID, YEAR(O.OrderDate) AS OrderYear, O.OrderID 
+    FROM Sales.Orders AS O
+) AS Input
+PIVOT (
+    COUNT(OrderID) 
+    FOR OrderYear IN ([2013], [2014], [2015])
+) AS PivotTable
+JOIN Application.People AS P ON P.PersonID = PivotTable.SalespersonPersonID
+WHERE P.IsSalesperson = 1 
+ORDER BY P.FullName;
+
+
+
+
+
