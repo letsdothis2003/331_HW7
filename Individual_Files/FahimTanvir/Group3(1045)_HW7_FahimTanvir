@@ -120,4 +120,21 @@ WHERE SaleRank <= 3
 ORDER BY FullName, SaleRank;
 
 
+--6
+/*This will generate a report where each item shows how many units sold, each category shows a 
+subtotal. At the bottom is the grand total.This is done by joining invoices to products and groups, 
+summing up quantities sold, and uses ROLLUP to show item totals, group totals, and the overall total, which is all sorted by lowest sales first */
+
+
+SELECT 
+    SG.StockGroupName, 
+    SI.StockItemName, 
+    SUM(IL.Quantity) AS TotalQuantity 
+FROM Sales.InvoiceLines AS IL
+JOIN Warehouse.StockItems AS SI ON IL.StockItemID = SI.StockItemID
+JOIN Warehouse.StockItemStockGroups AS SISG ON SI.StockItemID = SISG.StockItemID
+JOIN Warehouse.StockGroups AS SG ON SISG.StockGroupID = SG.StockGroupID
+GROUP BY ROLLUP (SG.StockGroupName, SI.StockItemName)
+ORDER BY TotalQuantity ASC, SI.StockItemName;
+
 
