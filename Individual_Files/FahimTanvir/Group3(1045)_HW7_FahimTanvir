@@ -153,3 +153,78 @@ GROUP BY CUBE (C.CustomerName, YEAR(O.OrderDate))
 HAVING C.CustomerName IS NOT NULL 
 AND Year (O.OrderDate) IS NOT NULL
 ORDER BY C.CustomerName, OrderYear, OrderCount DESC;
+
+
+USE WideWorldImporters;
+--8
+/*This generates each a report about profits, specifically partitioning
+our sales from highest profitability and ranking them. For every item we sold on an invoice, I 
+want to know how much profit it made I also want to see the absolute highest profit made 
+by any single item on that same invoice. This lets me check if my current item is a well and good
+performer or just average(or even low) for that sale.*/
+SELECT 
+    InvoiceID, 
+    InvoiceLineID, 
+    LineProfit, 
+    MAX(LineProfit) OVER (PARTITION BY InvoiceID) AS MaxProfit, 
+    CASE WHEN LineProfit = MAX(LineProfit) OVER (PARTITION BY InvoiceID) 
+         THEN 'Highest Profit' ELSE 'Nothing Special' END AS Rank 
+FROM Sales.InvoiceLines
+WHERE LineProfit > 0 
+ORDER BY InvoiceID, LineProfit DESC;
+
+
+USE WideWorldImporters;
+--9
+/*Splits customers into 4 tiers, Tier 1 being lowest spender or our least profitable 
+customer as they spend alot. Tier 2 is mediocre level, 3 is decent and 4 is highest..\
+This is done through N tile*/
+WITH CustomerSpend AS (
+    SELECT CustomerID, SUM(TransactionAmount) AS TotalSpent
+    FROM Sales.CustomerTransactions
+    GROUP BY CustomerID
+)
+SELECT 
+    CS.CustomerID, 
+    C.CustomerName, 
+    CS.TotalSpent, 
+    NTILE(4) OVER (ORDER BY CS.TotalSpent DESC) AS Tier 
+FROM CustomerSpend AS CS
+JOIN Sales.Customers AS C ON CS.CustomerID = C.CustomerID
+ORDER BY Tier, TotalSpent ASC;
+
+--10
+/*Split our customers by location to create a organized directory 
+and pinpoints the most recent customer activity for every distinct region to delivery.
+This is done by partitioning and using ROW_NUMBER.*/
+USE WideWorldImporters;
+WITH RankedOrders AS (
+    SELECT 
+        O.OrderID, 
+        O.OrderDate, 
+        C.CustomerName, 
+        A.CityName, 
+        SP.StateProvinceName, 
+        ROW_NUMBER() OVER (
+            PARTITION BY A.CityName, SP.StateProvinceName 
+            ORDER BY O.OrderDate DESC
+        ) AS rank
+    FROM Sales.Orders AS O
+    JOIN Sales.Customers AS C ON O.CustomerID = C.CustomerID
+    JOIN Application.Cities AS A ON C.DeliveryCityID = A.CityID
+    JOIN Application.StateProvinces AS SP ON A.StateProvinceID = SP.StateProvinceID
+)
+SELECT 
+    OrderID, 
+    OrderDate, 
+    CustomerName, 
+    CityName,
+    StateProvinceName 
+FROM RankedOrders
+WHERE rank = 1
+ORDER BY StateProvinceName, CityName;
+
+
+
+
+
