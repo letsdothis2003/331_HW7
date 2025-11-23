@@ -138,3 +138,18 @@ GROUP BY ROLLUP (SG.StockGroupName, SI.StockItemName)
 ORDER BY TotalQuantity ASC, SI.StockItemName;
 
 
+--7
+/*This generates each a report about customers and shows how many orders they made each year
+,their lifetime total (all years combined), the  total per year (all customers combined) and the 
+entire total (everyone, all years). THis is done by using a CUBE to give me counts for every combination of customer and year, 
+plus subtotals and the grand total*/
+SELECT 
+    C.CustomerName,
+    YEAR(O.OrderDate) AS OrderYear,
+    COUNT(O.OrderID) AS OrderCount
+FROM Sales.Orders AS O
+JOIN Sales.Customers AS C ON O.CustomerID = C.CustomerID
+GROUP BY CUBE (C.CustomerName, YEAR(O.OrderDate))
+HAVING C.CustomerName IS NOT NULL 
+AND Year (O.OrderDate) IS NOT NULL
+ORDER BY C.CustomerName, OrderYear, OrderCount DESC;
