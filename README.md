@@ -48,8 +48,7 @@ PAIR 1(ESFAR AND YOUSUF):
 
 
 PAIR 2(SAYANTAN AND FAHIM): :
-https://www.youtube.com/watch?v=dEHtte5sfZQ&feature=youtu.be
-
+https://www.youtube.com/watch?v=dEHtte5sfZQ
 
 
 INDIVIDUAL(Justin): 
