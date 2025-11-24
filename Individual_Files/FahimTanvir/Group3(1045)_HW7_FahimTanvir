@@ -2,7 +2,8 @@
 --Group_1045_4
 -- CSCI-331
 -- HW7
--- intro: 10 queries and props using chapter 7 and medium articles. 
+/* intro: 10 queries and props using chapter 7 and medium articles based on topic materials. Essentially, me and the rest of my group by extension used 
+window functions to make useful queries for east and specific data tracking. */
 
 
 USE WideWorldImporters;
