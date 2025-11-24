@@ -15,8 +15,7 @@ We separated each tasks into pairs:
 
 PAIR 1(ESFAR AND YOUSUF)
 
-PAIR 2(SAYANTAN AND FAHIM):
-https://www.youtube.com/watch?v=dEHtte5sfZQ&feature=youtu.be
+PAIR 2(SAYANTAN AND FAHIM)
 
 And Justin did the assignment  solo. 
 
@@ -48,7 +47,8 @@ PAIR 1(ESFAR AND YOUSUF):
 
 
 
-PAIR 2(SAYANTAN AND FAHIM): 
+PAIR 2(SAYANTAN AND FAHIM): :
+https://www.youtube.com/watch?v=dEHtte5sfZQ&feature=youtu.be
 
 
 
