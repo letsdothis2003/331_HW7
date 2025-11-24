@@ -35,7 +35,9 @@ https://medium.com/towardsdev/a-beginners-guide-to-sql-window-functions-with-rea
 
 https://medium.com/@otimoses5/mastering-sql-pivoting-and-unpivoting-technique-s-e54256e8d61d
 
+https://medium.com/%40arun-iiests/window-function-advanced-sql-a580556f8f1b
 
+https://medium.com/%40ebrubddl/rollup-and-cube-in-sql-4086746ec62b
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 Walkthrough/Video links:
 ------------------------------------------------------------------------------------------------------------------------------------------------------
