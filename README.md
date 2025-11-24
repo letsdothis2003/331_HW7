@@ -13,8 +13,11 @@ to get us to organize our data a lot better as it helps pare down what the user 
 
 We separated each tasks into pairs:
 PAIR 1(ESFAR AND YOUSUF)
-PAIR 2(SAYANTAN AND FAHIM)
+
+PAIR 2(SAYANTAN AND FAHIM):
+https://www.youtube.com/watch?v=dEHtte5sfZQ&feature=youtu.be
 And Justin did the project solo. 
+
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 Walkthrough/Video links:
