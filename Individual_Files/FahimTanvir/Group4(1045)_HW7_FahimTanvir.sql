@@ -1,1 +1,226 @@
+-- Fahim Tanvir
+--Group_1045_4
+-- CSCI-331
+-- HW7
+/* intro: 10 queries and props using chapter 7 and medium articles based on topic materials. Essentially, me and the rest of my group by extension used 
+window functions to make useful queries for east and specific data tracking. */
 
+
+USE WideWorldImporters;
+
+--1
+/*We are gonna put all stock items based on the total quantity sold 
+  within each month, identifying tied sellers without rank gaps.
+This helps inventory management and purchasing teams quickly 
+ identify the top-performing products on a monthly basis, 
+ allowing for timely restocking and what to focus on in terms of supplying. 
+I used  DENSE_RANK as it is crucial when rank equality matters, ensuring that 
+            sales reports are consistent and do not skip ranks due to ties.*/
+SELECT 
+    FORMAT(I.InvoiceDate, 'yyyy-MM') AS Month,
+    SI.StockItemName,
+    SUM(IL.Quantity) AS Sold,
+    DENSE_RANK() OVER ( --Partitions and looks at all products sold in the same month
+        PARTITION BY FORMAT(I.InvoiceDate, 'yyyy-MM')
+        ORDER BY SUM(IL.Quantity) DESC
+    ) AS Rank
+FROM Sales.Invoices I
+JOIN Sales.InvoiceLines IL ON I.InvoiceID = IL.InvoiceID
+JOIN Warehouse.StockItems SI ON IL.StockItemID = SI.StockItemID
+GROUP BY FORMAT(I.InvoiceDate, 'yyyy-MM'), SI.StockItemName
+ORDER BY Month DESC, Rank;
+--I intentionally made it from most recent to least transaction as in any computer system, it would make sense to see the most newest or recent thing that was just added in. 
+
+
+
+--2
+/*Find our highest ranking customers. We're partitioning based on customer
+id so we get each customer's transactions from earliest within our
+directory to latest with their recent transactions being inputted first.
+This is just to be more organized based on tracking out customer metrics*/
+
+USE WideWorldImporters;
+SELECT 
+    ct.CustomerID, 
+    ct.TransactionDate, 
+    ct.TransactionAmount, 
+    SUM(ct.TransactionAmount) 
+    OVER ( 
+        PARTITION BY ct.CustomerID 
+        ORDER BY ct.TransactionDate, ct.CustomerTransactionID 
+    ) AS TotalSpent
+FROM Sales.CustomerTransactions AS ct
+ORDER BY ct.CustomerID, ct.TransactionDate DESC;
+
+--3
+/*Compare monthly sales revenue using CTEs and lag function to pull each month's sales total.
+Helps with keeping metrics, especially since we are looking at sale's differences per month*/
+WITH MonthlySales AS (
+    SELECT 
+        FORMAT(InvoiceDate, 'MM-yyyy') AS SaleMonth,
+        SUM(TotalDryItems + TotalChillerItems) AS MonthlySalesTotal
+    FROM Sales.Invoices
+    GROUP BY FORMAT(InvoiceDate, 'MM-yyyy')
+)
+SELECT 
+    SaleMonth, 
+    MonthlySalesTotal, 
+    LAG(MonthlySalesTotal, 1) OVER (ORDER BY SaleMonth) AS PreviousMonthSales, 
+    MonthlySalesTotal - LAG(MonthlySalesTotal, 1)
+    OVER (ORDER BY SaleMonth) AS SalesDifference
+FROM MonthlySales
+ORDER BY SaleMonth;
+
+
+--4
+/*This is finds the salesperson and their orders per month.
+This is just for basic tracking of employee profits and data 
+and this is done by using a pivot function. */
+SELECT 
+    P.FullName AS Salesperson, 
+    [2013] AS [2013Orders], 
+    [2014] AS [2014Orders], 
+    [2015] AS [2015Orders]
+FROM (
+    SELECT O.SalespersonPersonID, YEAR(O.OrderDate) AS OrderYear, O.OrderID 
+    FROM Sales.Orders AS O
+) AS Input
+PIVOT (
+    COUNT(OrderID) 
+    FOR OrderYear IN ([2013], [2014], [2015])
+) AS PivotTable
+JOIN Application.People AS P ON P.PersonID = PivotTable.SalespersonPersonID
+WHERE P.IsSalesperson = 1 
+ORDER BY P.FullName;
+
+
+--5
+/*This builds onto prop and query 4 where I take the data per sales so 
+I can take a look at each transaction per order associated with that salesperson
+and find the top 3 profiting sales for that employee.
+This is just to specify what was seen in the last query so we get more data to 
+keep track of in terms of how productive everyone is. */
+WITH OrderTotals AS (
+    SELECT 
+        O.OrderID,
+        P.FullName,
+        SUM(OL.Quantity * OL.UnitPrice) AS OrderTotal,
+        ROW_NUMBER() OVER (
+            PARTITION BY O.SalespersonPersonID 
+            ORDER BY SUM(OL.Quantity * OL.UnitPrice) DESC
+        ) AS SaleRank
+    FROM Sales.Orders O
+    JOIN Sales.OrderLines OL ON O.OrderID = OL.OrderID
+    JOIN Application.People P ON P.PersonID = O.SalespersonPersonID
+    WHERE P.IsSalesperson = 1
+    GROUP BY O.OrderID, O.SalespersonPersonID, P.FullName
+)
+SELECT FullName, OrderID, OrderTotal, SaleRank
+FROM OrderTotals
+WHERE SaleRank <= 3
+ORDER BY FullName, SaleRank;
+
+
+--6
+/*This will generate a report where each item shows how many units sold, each category shows a 
+subtotal. At the bottom is the grand total.This is done by joining invoices to products and groups, 
+summing up quantities sold, and uses ROLLUP to show item totals, group totals, and the overall total, which is all sorted by lowest sales first */
+
+
+SELECT 
+    SG.StockGroupName, 
+    SI.StockItemName, 
+    SUM(IL.Quantity) AS TotalQuantity 
+FROM Sales.InvoiceLines AS IL
+JOIN Warehouse.StockItems AS SI ON IL.StockItemID = SI.StockItemID
+JOIN Warehouse.StockItemStockGroups AS SISG ON SI.StockItemID = SISG.StockItemID
+JOIN Warehouse.StockGroups AS SG ON SISG.StockGroupID = SG.StockGroupID
+GROUP BY ROLLUP (SG.StockGroupName, SI.StockItemName)
+ORDER BY TotalQuantity ASC, SI.StockItemName;
+
+
+--7
+/*This generates each a report about customers and shows how many orders they made each year
+,their lifetime total (all years combined), the  total per year (all customers combined) and the 
+entire total (everyone, all years). THis is done by using a CUBE to give me counts for every combination of customer and year, 
+plus subtotals and the grand total*/
+SELECT 
+    C.CustomerName,
+    YEAR(O.OrderDate) AS OrderYear,
+    COUNT(O.OrderID) AS OrderCount
+FROM Sales.Orders AS O
+JOIN Sales.Customers AS C ON O.CustomerID = C.CustomerID
+GROUP BY CUBE (C.CustomerName, YEAR(O.OrderDate))
+HAVING C.CustomerName IS NOT NULL 
+AND Year (O.OrderDate) IS NOT NULL
+ORDER BY C.CustomerName, OrderYear, OrderCount DESC;
+
+
+USE WideWorldImporters;
+--8
+/*This generates each a report about profits, specifically partitioning
+our sales from highest profitability and ranking them. For every item we sold on an invoice, I 
+want to know how much profit it made I also want to see the absolute highest profit made 
+by any single item on that same invoice. This lets me check if my current item is a well and good
+performer or just average(or even low) for that sale.*/
+SELECT 
+    InvoiceID, 
+    InvoiceLineID, 
+    LineProfit, 
+    MAX(LineProfit) OVER (PARTITION BY InvoiceID) AS MaxProfit, 
+    CASE WHEN LineProfit = MAX(LineProfit) OVER (PARTITION BY InvoiceID) 
+         THEN 'Highest Profit' ELSE 'Nothing Special' END AS Rank 
+FROM Sales.InvoiceLines
+WHERE LineProfit > 0 
+ORDER BY InvoiceID, LineProfit DESC;
+
+
+USE WideWorldImporters;
+--9
+/*Splits customers into 4 tiers, Tier 1 being lowest spender or our least profitable 
+customer as they spend alot. Tier 2 is mediocre level, 3 is decent and 4 is highest..\
+This is done through N tile*/
+WITH CustomerSpend AS (
+    SELECT CustomerID, SUM(TransactionAmount) AS TotalSpent
+    FROM Sales.CustomerTransactions
+    GROUP BY CustomerID
+)
+SELECT 
+    CS.CustomerID, 
+    C.CustomerName, 
+    CS.TotalSpent, 
+    NTILE(4) OVER (ORDER BY CS.TotalSpent DESC) AS Tier 
+FROM CustomerSpend AS CS
+JOIN Sales.Customers AS C ON CS.CustomerID = C.CustomerID
+ORDER BY Tier, TotalSpent ASC;
+
+--10
+/*Split our customers by location to create a organized directory 
+and pinpoints the most recent customer activity for every distinct region to delivery.
+This is done by partitioning and using ROW_NUMBER.*/
+USE WideWorldImporters;
+WITH RankedOrders AS (
+    SELECT 
+        O.OrderID, 
+        O.OrderDate, 
+        C.CustomerName, 
+        A.CityName, 
+        SP.StateProvinceName, 
+        ROW_NUMBER() OVER (
+            PARTITION BY A.CityName, SP.StateProvinceName 
+            ORDER BY O.OrderDate DESC
+        ) AS rank
+    FROM Sales.Orders AS O
+    JOIN Sales.Customers AS C ON O.CustomerID = C.CustomerID
+    JOIN Application.Cities AS A ON C.DeliveryCityID = A.CityID
+    JOIN Application.StateProvinces AS SP ON A.StateProvinceID = SP.StateProvinceID
+)
+SELECT 
+    OrderID, 
+    OrderDate, 
+    CustomerName, 
+    CityName,
+    StateProvinceName 
+FROM RankedOrders
+WHERE rank = 1
+ORDER BY StateProvinceName, CityName;
