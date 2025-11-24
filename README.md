@@ -21,6 +21,18 @@ And Justin did the assignment  solo.
 
 
 
+
+---------------------------------------------------------------
+Outside Sources:
+---------------------------------------------------------------
+We used these medium articles for further understanding:
+
+https://medium.com/@turkelturk/sql-window-functions-with-examples-590cd16f1ec6 
+https://medium.com/@manutej/mastering-sql-window-functions-guide-e6dc17eb1995
+https://medium.com/towardsdev/a-beginners-guide-to-sql-window-functions-with-real-examples-9e381574e40e
+https://medium.com/@otimoses5/mastering-sql-pivoting-and-unpivoting-technique-s-e54256e8d61d
+
+
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 Walkthrough/Video links:
 ------------------------------------------------------------------------------------------------------------------------------------------------------
