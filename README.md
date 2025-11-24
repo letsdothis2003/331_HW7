@@ -44,7 +44,7 @@ For the pairs, we solved each mystery our partner produced and collaborated usin
 For walkthroughs, we uploaded each on youtube:
 
 PAIR 1(ESFAR AND YOUSUF):
-
+https://youtu.be/CtyisWp9_rE
 
 
 PAIR 2(SAYANTAN AND FAHIM): :
