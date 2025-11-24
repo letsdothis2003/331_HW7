@@ -16,7 +16,9 @@ PAIR 1(ESFAR AND YOUSUF)
 
 PAIR 2(SAYANTAN AND FAHIM):
 https://www.youtube.com/watch?v=dEHtte5sfZQ&feature=youtu.be
-And Justin did the project solo. 
+
+And Justin did the assignment  solo. 
+
 
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
